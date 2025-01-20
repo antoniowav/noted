@@ -2,6 +2,9 @@ import { connectToDatabase } from "@/lib/mongodb";
 import { Note } from "@/lib/models/note";
 import { NextResponse } from "next/server";
 import type { ApiResponse, NoteType } from "@/types";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 export async function PATCH(
   request: Request,
@@ -42,32 +45,27 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _request: Request,
+  request: Request,
   { params }: { params: { id: string } }
 ) {
   try {
-    await connectToDatabase();
-    const note = await Note.findByIdAndDelete(params.id);
-
-    if (!note) {
-      return NextResponse.json<ApiResponse<null>>(
-        {
-          success: false,
-          error: "Note not found",
-        },
-        { status: 404 }
-      );
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    return NextResponse.json<ApiResponse<null>>({
-      success: true,
-    });
-  } catch (error) {
-    return NextResponse.json<ApiResponse<null>>(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : "Failed to delete note",
+    await prisma.note.delete({
+      where: {
+        id: params.id,
+        userId: session.user.id,
       },
+    });
+
+    return NextResponse.json({ message: "Note deleted" });
+  } catch (error) {
+    console.error("Delete error:", error);
+    return NextResponse.json(
+      { error: "Failed to delete note" },
       { status: 500 }
     );
   }
