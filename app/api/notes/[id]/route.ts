@@ -1,6 +1,6 @@
 import { connectToDatabase } from "@/lib/mongodb";
 import { Note } from "@/lib/models/note";
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import type { ApiResponse, NoteType } from "@/types";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -45,8 +45,8 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
+  req: NextRequest,
+  context: { params: { id: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -56,7 +56,7 @@ export async function DELETE(
 
     await prisma.note.delete({
       where: {
-        id: params.id,
+        id: context.params.id,
         userId: session.user.id,
       },
     });
