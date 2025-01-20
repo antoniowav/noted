@@ -15,8 +15,6 @@ export function UserMenu() {
   const { data: session } = useSession();
   const isMobile = useMediaQuery("(max-width: 640px)");
 
-  console.log(isMobile);
-
   if (!isMobile) {
     return <p className="text-sm">Signed in as {session?.user?.name}</p>;
   }

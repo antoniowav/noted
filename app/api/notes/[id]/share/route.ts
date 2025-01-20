@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { connectToDatabase } from "@/lib/mongodb";
 import { Note } from "@/lib/models/note";
 import { NextResponse } from "next/server";
@@ -6,10 +7,7 @@ import type { ApiResponse } from "@/types";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
-export async function POST(
-  _request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function POST(_request: Request, context: any) {
   try {
     const session = await getServerSession(authOptions);
     if (!session) {
@@ -20,7 +18,7 @@ export async function POST(
     }
 
     await connectToDatabase();
-    const note = await Note.findById(params.id);
+    const note = await Note.findById(context.params.id);
 
     if (!note) {
       return NextResponse.json(
@@ -30,7 +28,7 @@ export async function POST(
     }
 
     const shareId = nanoid(10);
-    await Note.findByIdAndUpdate(params.id, {
+    await Note.findByIdAndUpdate(context.params.id, {
       $set: { shared: true, shareId },
     });
 

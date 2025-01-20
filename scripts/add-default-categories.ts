@@ -14,8 +14,6 @@ async function addDefaultCategories() {
       },
     });
 
-    console.log(`Found ${users.length} users without categories`);
-
     for (const user of users) {
       await prisma.user.update({
         where: { id: user.id },
@@ -23,10 +21,7 @@ async function addDefaultCategories() {
           categories: DEFAULT_CATEGORIES,
         },
       });
-      console.log(`Updated categories for user ${user.email}`);
     }
-
-    console.log("Migration completed successfully");
   } catch (error) {
     console.error("Migration failed:", error);
   } finally {

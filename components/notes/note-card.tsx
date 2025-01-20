@@ -40,7 +40,10 @@ export function NoteCard({ note, onUpdate }: NoteCardProps) {
       });
 
       if (response.ok) {
+        toast.success("Note deleted successfully");
         onUpdate();
+      } else {
+        throw new Error("Failed to delete note");
       }
     } catch {
       toast.error("Failed to delete note", {

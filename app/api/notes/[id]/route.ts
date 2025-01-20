@@ -1,30 +1,27 @@
 import { connectToDatabase } from "@/lib/mongodb";
 import { Note } from "@/lib/models/note";
-import { NextResponse, NextRequest } from "next/server";
-import type { ApiResponse, NoteType } from "@/types";
+import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import type { ApiResponse, NoteType } from "@/types";
 
 export async function PATCH(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await context.params;
     await connectToDatabase();
     const body = await request.json();
     const note = await Note.findByIdAndUpdate(
-      params.id,
+      id,
       { ...body, updatedAt: new Date() },
       { new: true }
     );
 
     if (!note) {
       return NextResponse.json<ApiResponse<null>>(
-        {
-          success: false,
-          error: "Note not found",
-        },
+        { success: false, error: "Note not found" },
         { status: 404 }
       );
     }
@@ -45,23 +42,24 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  req: NextRequest,
-  context: { params: { id: string } }
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await context.params;
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    await prisma.note.delete({
-      where: {
-        id: context.params.id,
-        userId: session.user.id,
-      },
-    });
+    await connectToDatabase();
+    const deletedNote = await Note.findByIdAndDelete(id);
 
-    return NextResponse.json({ message: "Note deleted" });
+    if (!deletedNote) {
+      return NextResponse.json({ error: "Note not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Delete error:", error);
     return NextResponse.json(
