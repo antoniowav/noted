@@ -6,6 +6,11 @@
   package = "@netlify/plugin-nextjs"
 
 [[redirects]]
-  from = "/api/auth/*"
-  to = "/.netlify/functions/auth"
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/next"
   status = 200 
