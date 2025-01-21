@@ -30,12 +30,13 @@ export const authOptions: AuthOptions = {
 
       return true;
     },
-    session: async ({ session, user }) => {
-      if (session?.user) {
-        session.user.id = user.id;
-      }
-      return session;
-    },
+    session: ({ session, user }) => ({
+      ...session,
+      user: {
+        ...session.user,
+        id: user.id,
+      },
+    }),
   },
   session: {
     strategy: "database",
