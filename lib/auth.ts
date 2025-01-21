@@ -9,13 +9,6 @@ export const authOptions: NextAuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_ID!,
       clientSecret: process.env.GOOGLE_SECRET!,
-      authorization: {
-        params: {
-          prompt: "consent",
-          access_type: "offline",
-          response_type: "code",
-        },
-      },
     }),
   ],
   callbacks: {
@@ -29,9 +22,5 @@ export const authOptions: NextAuthOptions = {
   pages: {
     signIn: "/login",
   },
-  session: {
-    strategy: "database",
-  },
   secret: process.env.NEXTAUTH_SECRET,
-  debug: process.env.NODE_ENV === "development",
 };
