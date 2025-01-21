@@ -13,7 +13,6 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  output: "standalone",
   experimental: {
     serverActions: {
       allowedOrigins: ["takenoted.netlify.app"],
