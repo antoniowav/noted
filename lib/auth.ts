@@ -21,6 +21,9 @@ export const authOptions: AuthOptions = {
     }),
   ],
   secret: process.env.NEXTAUTH_SECRET,
+  session: {
+    strategy: "jwt",
+  },
   callbacks: {
     async signIn({ user }) {
       try {
@@ -41,17 +44,16 @@ export const authOptions: AuthOptions = {
         return false;
       }
     },
-    session: ({ session, user }) => ({
-      ...session,
-      user: {
-        ...session.user,
-        id: user.id,
-      },
-    }),
+    async session({ session, token }) {
+      if (session?.user) {
+        session.user.id = token.sub!;
+      }
+      return session;
+    },
   },
   pages: {
     signIn: "/login",
     error: "/login",
   },
-  debug: true,
+  debug: process.env.NODE_ENV === "development",
 };
