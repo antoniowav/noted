@@ -1,17 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient as Client } from ".prisma/client";
 
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
-};
-
-export const prisma =
-  globalForPrisma.prisma ??
-  new PrismaClient({
-    datasources: {
-      db: {
-        url: process.env.MONGODB_URI,
-      },
-    },
-  });
-
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+export const prisma = new Client();
+export type PrismaClient = Client;
