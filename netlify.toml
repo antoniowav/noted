@@ -8,19 +8,15 @@
 [build.environment]
   NEXT_USE_NETLIFY_EDGE = "true"
   NODE_VERSION = "18"
+  NEXT_TELEMETRY_DISABLED = "1"
 
 [[redirects]]
-  from = "/api/auth/*"
-  to = "/.netlify/functions/next"
+  from = "/_next/static/*"
+  to = "/_next/static/:splat"
   status = 200
 
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/next"
-  status = 200
-
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
   status = 200
   force = true 
