@@ -15,20 +15,23 @@ export const authOptions: AuthOptions = {
   ],
   callbacks: {
     async signIn({ user }) {
-      // Add default categories if user doesn't have any
-      const dbUser = await prisma.user.findUnique({
-        where: { email: user.email! },
-        select: { categories: true },
-      });
-
-      if (!dbUser?.categories?.length) {
-        await prisma.user.update({
+      try {
+        const dbUser = await prisma.user.findUnique({
           where: { email: user.email! },
-          data: { categories: DEFAULT_CATEGORIES },
+          select: { categories: true },
         });
-      }
 
-      return true;
+        if (!dbUser?.categories?.length) {
+          await prisma.user.update({
+            where: { email: user.email! },
+            data: { categories: DEFAULT_CATEGORIES },
+          });
+        }
+        return true;
+      } catch (error) {
+        console.error("Sign in error:", error);
+        return false;
+      }
     },
     session: ({ session, user }) => ({
       ...session,
@@ -40,5 +43,7 @@ export const authOptions: AuthOptions = {
   },
   pages: {
     signIn: "/login",
+    error: "/login",
   },
+  debug: process.env.NODE_ENV === "development",
 };
