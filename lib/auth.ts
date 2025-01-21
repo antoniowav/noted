@@ -38,7 +38,7 @@ export const authOptions: AuthOptions = {
       },
     }),
   },
-  session: {
-    strategy: "database",
+  pages: {
+    signIn: "/login",
   },
 };
