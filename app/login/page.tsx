@@ -3,11 +3,7 @@ import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import { LoginForm } from "@/components/auth/login-form";
 
-export default async function LoginPage({
-  searchParams: { error },
-}: {
-  searchParams: { error?: string };
-}) {
+export default async function LoginPage() {
   const session = await getServerSession(authOptions);
 
   if (session) {
@@ -23,13 +19,6 @@ export default async function LoginPage({
             Sign in to your account to continue
           </p>
         </div>
-        {error && (
-          <div className="text-red-500 mb-4">
-            {error === "OAuthCallback"
-              ? "There was a problem signing you in. Please try again."
-              : "An error occurred during sign in."}
-          </div>
-        )}
         <LoginForm />
       </div>
     </div>
