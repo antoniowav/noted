@@ -12,10 +12,12 @@ export const authOptions: AuthOptions = {
       clientId: process.env.GOOGLE_ID!,
       clientSecret: process.env.GOOGLE_SECRET!,
       authorization: {
+        url: "https://accounts.google.com/o/oauth2/v2/auth",
         params: {
           prompt: "consent",
           access_type: "offline",
           response_type: "code",
+          redirect_uri: `${process.env.NEXTAUTH_URL}/api/auth/callback/google`,
         },
       },
     }),
@@ -31,7 +33,6 @@ export const authOptions: AuthOptions = {
           where: { email: user.email! },
           select: { categories: true },
         });
-
         if (!dbUser?.categories?.length) {
           await prisma.user.update({
             where: { email: user.email! },
