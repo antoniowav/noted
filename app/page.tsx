@@ -6,6 +6,7 @@ import { NoteForm } from "@/components/notes/note-form";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { UserMenu } from "@/components/user-menu";
+import { Calendar } from "lucide-react";
 
 export default async function HomePage() {
   const session = await getServerSession(authOptions);
@@ -25,6 +26,11 @@ export default async function HomePage() {
         </div>
         <div className="flex flex-wrap items-center gap-2 sm:gap-4">
           <UserMenu />
+          <Link href="/calendar">
+            <Button variant="ghost" size="icon">
+              <Calendar className="h-4 w-4" />
+            </Button>
+          </Link>
           <Link href="/settings">
             <Button variant="outline" size="sm">
               Settings

@@ -23,7 +23,9 @@ export default function RootLayout({ children }: RootLayoutProps) {
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <AuthProvider>
             <Providers>
-              <main className="min-h-screen bg-background">{children}</main>
+              <div className="flex min-h-screen flex-col">
+                <main className="min-h-screen bg-background">{children}</main>
+              </div>
             </Providers>
           </AuthProvider>
           <Toaster position="top-right" expand={false} richColors closeButton />
