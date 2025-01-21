@@ -1,32 +1,27 @@
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
 
 const DEFAULT_CATEGORIES = ["personal", "work", "ideas", "tasks"];
 
-async function addDefaultCategories() {
+async function main() {
   try {
-    const users = await prisma.user.findMany({
-      where: {
-        categories: {
-          isEmpty: true,
-        },
-      },
-    });
+    const users = await prisma.user.findMany();
 
     for (const user of users) {
-      await prisma.user.update({
-        where: { id: user.id },
-        data: {
-          categories: DEFAULT_CATEGORIES,
-        },
+      const notes = await prisma.note.findMany({
+        where: { userId: user.id },
+        select: { category: true },
       });
+
+      if (!notes.some((note) => note.category)) {
+        await prisma.note.updateMany({
+          where: { userId: user.id },
+          data: { category: DEFAULT_CATEGORIES[0] },
+        });
+      }
     }
   } catch (error) {
-    console.error("Migration failed:", error);
-  } finally {
-    await prisma.$disconnect();
+    console.error("Error:", error);
   }
 }
 
-addDefaultCategories();
+main();

@@ -1,43 +1,37 @@
-import { AuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
+import { NextAuthOptions } from "next-auth";
 
-const DEFAULT_CATEGORIES = ["personal", "work", "ideas", "tasks"];
-
-export const authOptions: AuthOptions = {
+export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_ID!,
       clientSecret: process.env.GOOGLE_SECRET!,
+      authorization: {
+        params: {
+          prompt: "consent",
+          access_type: "offline",
+          response_type: "code",
+        },
+      },
     }),
   ],
   callbacks: {
-    async signIn({ user }) {
-      // Add default categories if user doesn't have any
-      const dbUser = await prisma.user.findUnique({
-        where: { email: user.email! },
-        select: { categories: true },
-      });
-
-      if (!dbUser?.categories?.length) {
-        await prisma.user.update({
-          where: { email: user.email! },
-          data: { categories: DEFAULT_CATEGORIES },
-        });
-      }
-
-      return true;
-    },
-    session: async ({ session, user }) => {
-      if (session?.user) {
+    session({ session, user }) {
+      if (session.user) {
         session.user.id = user.id;
       }
       return session;
     },
   },
+  pages: {
+    signIn: "/login",
+  },
   session: {
     strategy: "database",
   },
+  secret: process.env.NEXTAUTH_SECRET,
+  debug: process.env.NODE_ENV === "development",
 };
