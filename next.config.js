@@ -15,7 +15,10 @@ const nextConfig = {
   },
   output: "standalone",
   experimental: {
-    serverActions: true,
+    serverActions: {
+      allowedOrigins: ["takenoted.netlify.app"],
+      bodySizeLimit: "2mb",
+    },
   },
 };
 
