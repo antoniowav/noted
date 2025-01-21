@@ -23,6 +23,7 @@ function capitalizeFirstLetter(str: string) {
 
 export function NoteCard({ note, onUpdate }: NoteCardProps) {
   const { data: categories = [] } = useCategories();
+
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isShared, setIsShared] = useState(note.shared);
@@ -158,9 +159,9 @@ export function NoteCard({ note, onUpdate }: NoteCardProps) {
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <option value="">Select category</option>
-              {categories.map((category: string) => (
-                <option key={category} value={category}>
-                  {category}
+              {categories.map((cat: string) => (
+                <option key={cat} value={cat}>
+                  {cat}
                 </option>
               ))}
             </select>

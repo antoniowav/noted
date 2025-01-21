@@ -1,43 +1,38 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import type { ApiResponse } from "@/types";
+import { connectToDatabase } from "@/lib/mongodb";
+import type { ApiResponse, CategoryType } from "@/types";
+import { Category } from "@/lib/models/category";
 
 const DEFAULT_CATEGORIES = ["personal", "work", "ideas", "tasks"];
 
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
-      return NextResponse.json<ApiResponse<null>>(
+    if (!session) {
+      return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
       );
     }
 
-    const notes = await prisma.note.findMany({
-      where: { userId: session.user.id },
-      select: { category: true },
-      distinct: ["category"],
-    });
-
-    const userCategories = notes
-      .map((note) => note.category)
-      .filter((category): category is string => category !== null);
-
-    const uniqueCategories = [
-      ...new Set([...DEFAULT_CATEGORIES, ...userCategories]),
-    ];
+    await connectToDatabase();
+    const categories = await Category.find({ userId: session.user.id })
+      .sort({ name: 1 })
+      .lean();
 
     return NextResponse.json<ApiResponse<string[]>>({
       success: true,
-      data: uniqueCategories,
+      data: categories.map((cat) => cat.name),
     });
   } catch (error) {
-    console.error("Failed to fetch categories:", error);
     return NextResponse.json<ApiResponse<null>>(
-      { success: false, error: "Failed to fetch categories" },
+      {
+        success: false,
+        error:
+          error instanceof Error ? error.message : "Failed to fetch categories",
+      },
       { status: 500 }
     );
   }
@@ -46,72 +41,51 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
-      return NextResponse.json<ApiResponse<null>>(
+    if (!session) {
+      return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
       );
     }
 
-    const { category } = await request.json();
-    const newCategory = category.toLowerCase();
+    await connectToDatabase();
+    const { category: name } = await request.json();
 
-    // Check if category already exists in defaults
-    if (DEFAULT_CATEGORIES.includes(newCategory)) {
-      return NextResponse.json<ApiResponse<null>>(
+    // Check if category already exists
+    const existingCategory = await Category.findOne({
+      userId: session.user.id,
+      name,
+    });
+
+    if (existingCategory || DEFAULT_CATEGORIES.includes(name)) {
+      return NextResponse.json(
         { success: false, error: "Category already exists" },
         { status: 400 }
       );
     }
 
-    // Check if category exists in user's notes
-    const existingNote = await prisma.note.findFirst({
-      where: {
-        userId: session.user.id,
-        category: newCategory,
-      },
+    // Create the new category
+    await Category.create({
+      name,
+      userId: session.user.id,
     });
 
-    if (existingNote) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: "Category already exists" },
-        { status: 400 }
-      );
-    }
-
-    // Create a note with the new category
-    await prisma.note.create({
-      data: {
-        title: "New Category",
-        content: "Category created",
-        category: newCategory,
-        userId: session.user.id,
-      },
-    });
-
-    // Get updated categories
-    const notes = await prisma.note.findMany({
-      where: { userId: session.user.id },
-      select: { category: true },
-      distinct: ["category"],
-    });
-
-    const userCategories = notes
-      .map((note) => note.category)
-      .filter((category): category is string => category !== null);
-
-    const uniqueCategories = [
-      ...new Set([...DEFAULT_CATEGORIES, ...userCategories]),
-    ];
+    const categories = await Category.find({ userId: session.user.id })
+      .sort({ name: 1 })
+      .lean();
 
     return NextResponse.json<ApiResponse<string[]>>({
       success: true,
-      data: uniqueCategories,
+      data: categories.map((cat) => cat.name),
     });
   } catch (error) {
-    console.error("Failed to add category:", error);
+    console.error("Failed to create category:", error);
     return NextResponse.json<ApiResponse<null>>(
-      { success: false, error: "Failed to add category" },
+      {
+        success: false,
+        error:
+          error instanceof Error ? error.message : "Failed to create category",
+      },
       { status: 500 }
     );
   }
@@ -120,57 +94,40 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
-      return NextResponse.json<ApiResponse<null>>(
+    if (!session) {
+      return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
       );
     }
 
-    const { category } = await request.json();
+    const { name } = await request.json();
 
-    // Don't allow deletion of default categories
-    if (DEFAULT_CATEGORIES.includes(category)) {
-      return NextResponse.json<ApiResponse<null>>(
+    if (DEFAULT_CATEGORIES.includes(name)) {
+      return NextResponse.json(
         { success: false, error: "Cannot delete default category" },
         { status: 400 }
       );
     }
 
-    // Update all notes with this category to have no category
-    await prisma.note.updateMany({
-      where: {
-        userId: session.user.id,
-        category,
-      },
-      data: {
-        category: null,
-      },
+    await connectToDatabase();
+    await Category.deleteOne({ userId: session.user.id, name });
+
+    const categories = await Category.find({ userId: session.user.id }).sort({
+      name: 1,
     });
 
-    // Get updated categories
-    const notes = await prisma.note.findMany({
-      where: { userId: session.user.id },
-      select: { category: true },
-      distinct: ["category"],
-    });
-
-    const userCategories = notes
-      .map((note) => note.category)
-      .filter((category): category is string => category !== null);
-
-    const uniqueCategories = [
-      ...new Set([...DEFAULT_CATEGORIES, ...userCategories]),
-    ];
-
-    return NextResponse.json<ApiResponse<string[]>>({
+    return NextResponse.json<ApiResponse<CategoryType[]>>({
       success: true,
-      data: uniqueCategories,
+      data: categories,
     });
   } catch (error) {
-    console.error("Failed to delete category:", error);
     return NextResponse.json<ApiResponse<null>>(
-      { success: false, error: "Failed to delete category" },
+      {
+        success: false,
+        error:
+          error instanceof Error ? error.message : "Failed to delete category",
+      },
       { status: 500 }
     );
   }

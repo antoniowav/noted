@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -25,6 +25,7 @@ import { useSession } from "next-auth/react";
 import { useCategories } from "@/hooks/use-categories";
 import { X } from "lucide-react";
 import { DEFAULT_CATEGORIES } from "@/lib/constants";
+import { cn } from "@/lib/utils";
 
 interface SettingsFormProps {
   user: {
@@ -42,6 +43,8 @@ export function SettingsForm({ user }: SettingsFormProps) {
   const [newCategory, setNewCategory] = useState("");
   const router = useRouter();
   const { update: updateSession } = useSession();
+  const [isShaking, setIsShaking] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const hasNameChanged = name !== user.name;
 
@@ -86,11 +89,21 @@ export function SettingsForm({ user }: SettingsFormProps) {
         },
       });
 
+      const { data, error } = await response.json();
+
       if (response.ok) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        queryClient.setQueryData(["categories"], (_oldData: string[] = []) => [
+          ...new Set([...DEFAULT_CATEGORIES, ...data]),
+        ]);
         setNewCategory("");
-        const { data } = await response.json();
-        queryClient.setQueryData(["categories"], data); // Immediately update cache
         toast.success("Category added successfully");
+      } else {
+        setIsShaking(true);
+        setNewCategory("");
+        setTimeout(() => setIsShaking(false), 500);
+        toast.error(error || "Failed to add category");
+        inputRef.current?.focus();
       }
     } catch {
       toast.error("Failed to add category");
@@ -123,13 +136,13 @@ export function SettingsForm({ user }: SettingsFormProps) {
       try {
         const response = await fetch("/api/categories", {
           method: "DELETE",
-          body: JSON.stringify({ category }),
+          body: JSON.stringify({ name: category }),
           headers: { "Content-Type": "application/json" },
         });
 
         if (response.ok) {
           toast.success("Category deleted");
-          mutate(); // Refresh categories list
+          mutate();
         }
       } catch {
         toast.error("Failed to delete category");
@@ -196,14 +209,19 @@ export function SettingsForm({ user }: SettingsFormProps) {
           <div className="space-y-4">
             <div className="flex gap-2">
               <Input
+                ref={inputRef}
                 placeholder="New category"
                 value={newCategory}
                 onChange={(e) => setNewCategory(e.target.value)}
+                className={cn(
+                  isShaking && "animate-shake",
+                  "transition-transform"
+                )}
               />
               <Button onClick={addCategory}>Add</Button>
             </div>
             <div className="flex flex-wrap gap-2">
-              {existingCategories.map((category: string) => (
+              {existingCategories.map((category) => (
                 <CategoryBadge key={category} category={category} />
               ))}
             </div>
