@@ -13,12 +13,6 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  experimental: {
-    serverActions: {
-      allowedOrigins: ["takenoted.netlify.app"],
-      bodySizeLimit: "2mb",
-    },
-  },
 };
 
 module.exports = nextConfig;
