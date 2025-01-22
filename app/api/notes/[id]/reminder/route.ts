@@ -20,9 +20,8 @@ export async function POST(
 
     const { id } = await params;
     const { date } = await request.json();
-
-    // Convert the date string to UTC while preserving the local time
     const localDate = new Date(date);
+
     const utcDate = new Date(
       Date.UTC(
         localDate.getFullYear(),
