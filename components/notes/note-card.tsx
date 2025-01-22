@@ -89,11 +89,38 @@ export function NoteCard({ note, onUpdate }: NoteCardProps) {
       if (note.shareId) {
         // If already shared, just copy the link
         const shareUrl = `${window.location.origin}/share/${note.shareId}`;
-        await navigator.clipboard.writeText(shareUrl);
-        toast.success("Link copied to clipboard", {
-          description:
-            "Share this link with others to let them view your note.",
-        });
+
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(shareUrl);
+          toast.success("Link copied to clipboard", {
+            description:
+              "Share this link with others to let them view your note.",
+          });
+        } else {
+          // Fallback for mobile or non-secure contexts
+          const textArea = document.createElement("textarea");
+          textArea.value = shareUrl;
+          textArea.style.position = "fixed";
+          textArea.style.left = "-999999px";
+          textArea.style.top = "-999999px";
+          document.body.appendChild(textArea);
+          textArea.focus();
+          textArea.select();
+
+          try {
+            document.execCommand("copy");
+            toast.success("Link copied to clipboard", {
+              description:
+                "Share this link with others to let them view your note.",
+            });
+          } catch (err) {
+            toast.error("Failed to copy link", {
+              description: `Please copy this link manually: ${shareUrl}`,
+            });
+          } finally {
+            textArea.remove();
+          }
+        }
         return;
       }
 
@@ -107,14 +134,42 @@ export function NoteCard({ note, onUpdate }: NoteCardProps) {
 
       if (response.ok && data?.shareId) {
         const shareUrl = `${window.location.origin}/share/${data.shareId}`;
-        await navigator.clipboard.writeText(shareUrl);
-        toast.success("Link copied to clipboard", {
-          description:
-            "Share this link with others to let them view your note.",
-        });
-        onUpdate(); // Update the note to get the new shareId
+
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(shareUrl);
+          toast.success("Link copied to clipboard", {
+            description:
+              "Share this link with others to let them view your note.",
+          });
+        } else {
+          // Same fallback as above
+          const textArea = document.createElement("textarea");
+          textArea.value = shareUrl;
+          textArea.style.position = "fixed";
+          textArea.style.left = "-999999px";
+          textArea.style.top = "-999999px";
+          document.body.appendChild(textArea);
+          textArea.focus();
+          textArea.select();
+
+          try {
+            document.execCommand("copy");
+            toast.success("Link copied to clipboard", {
+              description:
+                "Share this link with others to let them view your note.",
+            });
+          } catch (err) {
+            toast.error("Failed to copy link", {
+              description: `Please copy this link manually: ${shareUrl}`,
+            });
+          } finally {
+            textArea.remove();
+          }
+        }
+        onUpdate();
       }
-    } catch {
+    } catch (error) {
+      console.error("Share error:", error);
       toast.error("Failed to share note", {
         description: "Please try again later.",
       });

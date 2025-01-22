@@ -17,7 +17,7 @@ export default function NotFound() {
           <Link href="/">
             <Button
               variant="outline"
-              className="hover:bg-primary/10 hover:text-primary"
+              className="hover:bg-primary/10 hover:text-primary mt-2"
             >
               Return Home
             </Button>
