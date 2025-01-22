@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { DeleteNoteDialog } from "./delete-note-dialog";
 import { Badge } from "@/components/ui/badge";
 import { useCategories } from "@/hooks/use-categories";
+import { LinkIcon, PencilIcon, TrashIcon } from "lucide-react";
 
 interface NoteCardProps {
   note: NoteType;
@@ -26,11 +27,7 @@ export function NoteCard({ note, onUpdate }: NoteCardProps) {
 
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isShared, setIsShared] = useState(note.shared);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [shareUrl, setShareUrl] = useState<string | null>(
-    note.shareId ? `${window.location.origin}/share/${note.shareId}` : null
-  );
   const [editingCategory, setEditingCategory] = useState<string>("");
 
   async function handleDelete() {
@@ -89,6 +86,18 @@ export function NoteCard({ note, onUpdate }: NoteCardProps) {
 
   async function handleShare() {
     try {
+      if (note.shareId) {
+        // If already shared, just copy the link
+        const shareUrl = `${window.location.origin}/share/${note.shareId}`;
+        await navigator.clipboard.writeText(shareUrl);
+        toast.success("Link copied to clipboard", {
+          description:
+            "Share this link with others to let them view your note.",
+        });
+        return;
+      }
+
+      // If not shared, create share link
       const response = await fetch(`/api/notes/${note._id}/share`, {
         method: "POST",
         credentials: "include",
@@ -97,33 +106,17 @@ export function NoteCard({ note, onUpdate }: NoteCardProps) {
       const { data } = await response.json();
 
       if (response.ok && data?.shareId) {
-        setIsShared(true);
-        const url = `${window.location.origin}/share/${data.shareId}`;
-        setShareUrl(url);
-        await navigator.clipboard.writeText(url);
+        const shareUrl = `${window.location.origin}/share/${data.shareId}`;
+        await navigator.clipboard.writeText(shareUrl);
         toast.success("Link copied to clipboard", {
           description:
             "Share this link with others to let them view your note.",
         });
+        onUpdate(); // Update the note to get the new shareId
       }
     } catch {
       toast.error("Failed to share note", {
         description: "Please try again later.",
-      });
-    }
-  }
-
-  async function handleCopyLink() {
-    if (!shareUrl) return;
-
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      toast.success("Link copied to clipboard", {
-        description: "Share this link with others to let them view your note.",
-      });
-    } catch {
-      toast.error("Failed to copy link", {
-        description: "Please try copying manually.",
       });
     }
   }
@@ -194,7 +187,7 @@ export function NoteCard({ note, onUpdate }: NoteCardProps) {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="group rounded-xl border bg-gradient-to-b from-card to-card/50 p-6 shadow-lg space-y-6 hover:shadow-xl transition-all duration-300"
+        className="rounded-xl border bg-gradient-to-b from-card to-card/50 p-6 shadow-lg space-y-6 hover:shadow-xl transition-all duration-300"
       >
         <div className="space-y-4">
           <div>
@@ -216,42 +209,40 @@ export function NoteCard({ note, onUpdate }: NoteCardProps) {
           </p>
         </div>
         <div className="flex gap-2 pt-4 border-t border-muted/20">
-          {isShared ? (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleCopyLink}
-              className="hover:bg-primary/10 hover:text-primary"
-            >
-              Copy Link
-            </Button>
-          ) : (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleShare}
-              className="hover:bg-primary/10 hover:text-primary"
-            >
-              Share
-            </Button>
-          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleShare}
+            className="group relative overflow-hidden hover:bg-primary/10 hover:text-primary transition-all duration-200 w-[90px] hover:w-[120px]"
+          >
+            <span className="absolute inset-0 w-full h-full flex items-center justify-center transition-all duration-200 group-hover:-translate-x-2">
+              {note.shareId ? "Copy Link" : "Share"}
+            </span>
+            <LinkIcon className="absolute right-3 h-4 w-4 transition-all duration-200 opacity-0 translate-x-4 group-hover:opacity-100 group-hover:translate-x-0" />
+          </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={() => setIsEditing(true)}
             disabled={isLoading}
-            className="hover:bg-primary/10 hover:text-primary"
+            className="group relative overflow-hidden hover:bg-primary/10 hover:text-primary transition-all duration-200 w-[60px] hover:w-[90px]"
           >
-            Edit
+            <span className="absolute inset-0 w-full h-full flex items-center justify-center transition-all duration-200 group-hover:-translate-x-2">
+              Edit
+            </span>
+            <PencilIcon className="absolute right-3 h-4 w-4 transition-all duration-200 opacity-0 translate-x-4 group-hover:opacity-100 group-hover:translate-x-0" />
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={() => setIsDeleteDialogOpen(true)}
             disabled={isLoading}
-            className="hover:bg-destructive/10 hover:text-destructive ml-auto"
+            className="group relative overflow-hidden hover:bg-destructive/10 hover:text-destructive ml-auto transition-all duration-200 w-[70px] hover:w-[100px]"
           >
-            Delete
+            <span className="absolute inset-0 w-full h-full flex items-center justify-center transition-all duration-200 group-hover:-translate-x-2">
+              Delete
+            </span>
+            <TrashIcon className="absolute right-3 h-4 w-4 transition-all duration-200 opacity-0 translate-x-4 group-hover:opacity-100 group-hover:translate-x-0" />
           </Button>
         </div>
       </motion.div>
