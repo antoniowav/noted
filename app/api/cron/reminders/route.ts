@@ -46,7 +46,7 @@ export async function GET(req: Request) {
 
       const mailOptions = {
         from: `"Note Reminder" <${EMAIL_USER}>`,
-        to: session.user.email,
+        to: "toni.piattelli@gmail.com",
         subject: `Reminder: ${note.title}`,
         text: `Hi, you have a reminder for your note titled "${note.title}". Content: ${note.content}`,
       };
