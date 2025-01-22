@@ -135,13 +135,17 @@ export function NoteCard({ note, onUpdate }: NoteCardProps) {
   async function setReminder() {
     if (!date) return;
 
-    // Convert local time to UTC ISO string
-    const isoDate = date.toISOString();
+    // Adjust for timezone offset to preserve local time
+    const adjustedDate = new Date(
+      date.getTime() - date.getTimezoneOffset() * 60000
+    );
+    console.log("Original date:", date);
+    console.log("Adjusted date:", adjustedDate);
 
     try {
       const response = await fetch(`/api/notes/${note._id}/reminder`, {
         method: "POST",
-        body: JSON.stringify({ date: isoDate }),
+        body: JSON.stringify({ date: adjustedDate.toISOString() }),
         headers: { "Content-Type": "application/json" },
       });
 
