@@ -7,10 +7,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
 import { useCategories } from "@/hooks/use-categories";
+import { useNotes } from "@/hooks/use-notes";
+import { toast } from "sonner";
 
 export function NoteForm() {
   const { data: session } = useSession();
   const { data: categories = [] } = useCategories();
+  const { mutate } = useNotes();
   const [isLoading, setIsLoading] = useState(false);
   const [category, setCategory] = useState<string>("");
 
@@ -38,10 +41,14 @@ export function NoteForm() {
       if (response.ok) {
         form.reset();
         setCategory("");
-        window.dispatchEvent(new CustomEvent("refreshNotes"));
+        await mutate();
+        toast.success("Note created successfully");
+      } else {
+        throw new Error("Failed to create note");
       }
     } catch (error) {
       console.error("Failed to create note:", error);
+      toast.error("Failed to create note");
     } finally {
       setIsLoading(false);
     }

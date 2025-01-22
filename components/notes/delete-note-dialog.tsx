@@ -25,22 +25,29 @@ export function DeleteNoteDialog({
 }: DeleteNoteDialogProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[425px] gap-6 p-6 mr-4 sm:mx-auto max-w-[calc(100%-2rem)] rounded-lg">
         <DialogHeader>
-          <DialogTitle>Delete Note</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-xl">Delete Note</DialogTitle>
+          <DialogDescription className="text-muted-foreground pt-2">
             Are you sure you want to delete this note? This action cannot be
             undone.
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={isLoading}>
+        <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-0">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+            className="w-full sm:w-auto"
+          >
             Cancel
           </Button>
           <Button
+            type="button"
             variant="destructive"
             onClick={onConfirm}
             disabled={isLoading}
+            className="w-full sm:w-auto"
           >
             {isLoading ? "Deleting..." : "Delete Note"}
           </Button>

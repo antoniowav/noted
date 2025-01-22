@@ -9,7 +9,7 @@ import {
   eachDayOfInterval,
   isSameDay,
 } from "date-fns";
-import { ChevronLeft, ChevronRight, ArrowLeft } from "lucide-react";
+import { ChevronLeft, ChevronRight, ArrowLeft, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -60,7 +60,7 @@ export function CalendarView() {
   const selectedNotes = selectedDay ? getNotesForDay(selectedDay) : [];
 
   return (
-    <div className="w-full max-w-4xl mx-auto p-4">
+    <div className="w-full max-w-4xl mx-auto p-2 sm:p-4">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => router.back()}>
@@ -96,15 +96,18 @@ export function CalendarView() {
         </div>
       </div>
 
-      <div className="grid grid-cols-7 gap-2 mb-2">
-        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-          <div key={day} className="text-center font-medium p-2">
+      <div className="grid grid-cols-7 gap-2 sm:gap-3 mb-4">
+        {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((day) => (
+          <div
+            key={day}
+            className="text-center font-medium p-1 sm:p-2 text-xs sm:text-sm text-muted-foreground"
+          >
             {day}
           </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-7 gap-2">
+      <div className="grid grid-cols-7 gap-2 sm:gap-3">
         {eachDayOfInterval({
           start: startOfMonth(currentDate),
           end: endOfMonth(currentDate),
@@ -113,15 +116,18 @@ export function CalendarView() {
           return (
             <Card
               key={day.toString()}
-              className={`min-h-[100px] p-2 cursor-pointer transition-colors ${
+              className={`min-h-[70px] sm:min-h-[100px] p-2 sm:p-4 cursor-pointer transition-colors w-[calc(100vw/8)] sm:w-auto ${
                 dayNotes.length ? "bg-secondary/50 hover:bg-secondary/70" : ""
               }`}
               onClick={() => dayNotes.length && setSelectedDay(day)}
             >
-              <div className="text-sm mb-1">{format(day, "d")}</div>
+              <div className="text-base sm:text-sm mb-2 font-medium">
+                {format(day, "d")}
+              </div>
               {dayNotes.length > 0 && (
-                <div className="text-xs text-muted-foreground">
-                  {dayNotes.length} note{dayNotes.length > 1 ? "s" : ""}
+                <div className="flex items-center gap-1 text-muted-foreground">
+                  <FileText className="h-3 w-3" />
+                  <span className="text-xs">{dayNotes.length}</span>
                 </div>
               )}
             </Card>
@@ -130,16 +136,16 @@ export function CalendarView() {
       </div>
 
       <Dialog open={!!selectedDay} onOpenChange={() => setSelectedDay(null)}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[425px] gap-6 p-6 mx-4 sm:mx-auto max-w-[calc(100%-2rem)] rounded-lg">
           <DialogHeader>
             <DialogTitle>
               Notes for {selectedDay && format(selectedDay, "MMMM d, yyyy")}
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-4 max-h-[60vh] overflow-y-auto">
             {selectedNotes.map((note) => (
               <Card key={note._id} className="p-4">
-                <p>{note.title}</p>
+                <p className="font-medium">{note.title}</p>
                 <p className="text-sm text-muted-foreground mt-1">
                   {note.content}
                 </p>
