@@ -29,6 +29,7 @@ export function NoteCard({ note, onUpdate }: NoteCardProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<string>("");
+  const [isGeneratingLink, setIsGeneratingLink] = useState(false);
 
   async function handleDelete() {
     setIsLoading(true);
@@ -87,6 +88,7 @@ export function NoteCard({ note, onUpdate }: NoteCardProps) {
   async function handleShare() {
     try {
       if (!note.shareId) {
+        setIsGeneratingLink(true);
         const response = await fetch(`/api/notes/${note._id}/share`, {
           method: "POST",
           credentials: "include",
@@ -97,81 +99,33 @@ export function NoteCard({ note, onUpdate }: NoteCardProps) {
           throw new Error("Failed to create share link");
         }
 
-        const shareUrl = `${window.location.origin}/share/${data.shareId}`;
-
-        // For mobile devices, show the URL and let them copy manually
-        if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-          toast.success("Share link created", {
-            description: `Copy this link: ${shareUrl}`,
-            duration: 5000,
-          });
-          onUpdate();
-          return;
-        }
-
-        // For desktop, try to copy automatically
-        if (navigator.clipboard && window.isSecureContext) {
-          await navigator.clipboard.writeText(shareUrl);
-          toast.success("Link copied to clipboard");
-        } else {
-          // Fallback
-          const textArea = document.createElement("textarea");
-          textArea.value = shareUrl;
-          textArea.style.position = "fixed";
-          textArea.style.left = "-999999px";
-          textArea.style.top = "-999999px";
-          document.body.appendChild(textArea);
-          textArea.focus();
-          textArea.select();
-
-          try {
-            document.execCommand("copy");
-            toast.success("Link copied to clipboard");
-          } catch (err) {
-            toast.error("Failed to copy link", {
-              description: `Please copy this link manually: ${shareUrl}`,
-            });
-          } finally {
-            textArea.remove();
-          }
-        }
-
-        onUpdate();
+        await onUpdate();
+        toast.success("Share link generated", {
+          description: "Click the button again to copy the link",
+          duration: 3000,
+        });
         return;
       }
 
-      // For existing shareId
+      // Handle copying for both mobile and desktop
       const shareUrl = `${window.location.origin}/share/${note.shareId}`;
-      if (navigator.clipboard && window.isSecureContext) {
+      try {
         await navigator.clipboard.writeText(shareUrl);
         toast.success("Link copied to clipboard");
-      } else {
-        // Fallback for mobile or non-secure contexts
-        const textArea = document.createElement("textarea");
-        textArea.value = shareUrl;
-        textArea.style.position = "fixed";
-        textArea.style.left = "-999999px";
-        textArea.style.top = "-999999px";
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-
-        try {
-          document.execCommand("copy");
-          toast.success("Link copied to clipboard");
-        } catch (err) {
-          toast.error("Failed to copy link", {
-            description: `Please copy this link manually: ${shareUrl}`,
-          });
-        } finally {
-          textArea.remove();
-        }
+      } catch (err) {
+        // If clipboard API fails, show the link in a toast
+        toast.success("Share link", {
+          description: `Copy this link: ${shareUrl}`,
+          duration: 5000,
+        });
       }
     } catch (error) {
       console.error("Share error:", error);
       toast.error("Failed to share note", {
         description: "Please try again later.",
       });
+    } finally {
+      setIsGeneratingLink(false);
     }
   }
 
@@ -267,10 +221,11 @@ export function NoteCard({ note, onUpdate }: NoteCardProps) {
             variant="outline"
             size="sm"
             onClick={handleShare}
+            disabled={isGeneratingLink}
             className="group relative overflow-hidden hover:bg-primary/10 hover:text-primary transition-all duration-200 w-[90px] hover:w-[120px]"
           >
             <span className="absolute inset-0 w-full h-full flex items-center justify-center transition-all duration-200 group-hover:-translate-x-2">
-              Copy Link
+              {note.shareId ? "Copy Link" : "Share"}
             </span>
             <LinkIcon className="absolute right-3 h-4 w-4 transition-all duration-200 opacity-0 translate-x-4 group-hover:opacity-100 group-hover:translate-x-0" />
           </Button>
