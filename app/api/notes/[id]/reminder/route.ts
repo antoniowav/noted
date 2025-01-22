@@ -21,12 +21,24 @@ export async function POST(
     const { id } = await params;
     const { date } = await request.json();
 
+    // Convert the date string to UTC while preserving the local time
+    const localDate = new Date(date);
+    const utcDate = new Date(
+      Date.UTC(
+        localDate.getFullYear(),
+        localDate.getMonth(),
+        localDate.getDate(),
+        localDate.getHours(),
+        localDate.getMinutes()
+      )
+    );
+
     await db.collection("notes").updateOne(
       { _id: new ObjectId(id), userId: session.user.id },
       {
         $set: {
           reminder: {
-            date: new Date(date),
+            date: utcDate,
             sent: false,
           },
         },
