@@ -98,11 +98,23 @@ export function NoteCard({ note, onUpdate }: NoteCardProps) {
         }
 
         const shareUrl = `${window.location.origin}/share/${data.shareId}`;
+
+        // For mobile devices, show the URL and let them copy manually
+        if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+          toast.success("Share link created", {
+            description: `Copy this link: ${shareUrl}`,
+            duration: 5000,
+          });
+          onUpdate();
+          return;
+        }
+
+        // For desktop, try to copy automatically
         if (navigator.clipboard && window.isSecureContext) {
           await navigator.clipboard.writeText(shareUrl);
           toast.success("Link copied to clipboard");
         } else {
-          // Fallback for mobile or non-secure contexts
+          // Fallback
           const textArea = document.createElement("textarea");
           textArea.value = shareUrl;
           textArea.style.position = "fixed";
@@ -124,7 +136,6 @@ export function NoteCard({ note, onUpdate }: NoteCardProps) {
           }
         }
 
-        // Update the note after copying
         onUpdate();
         return;
       }
