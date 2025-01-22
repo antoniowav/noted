@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import nodemailer from "nodemailer";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 
 const CRON_SECRET = process.env.CRON_SECRET;
 const EMAIL_USER = process.env.EMAIL_USER;
@@ -21,16 +19,26 @@ const transporter = nodemailer.createTransport({
 
 export async function GET(req: Request) {
   try {
+    console.log("Starting reminder check...");
+
+    // Verify environment variables
     if (!CRON_SECRET || !EMAIL_USER || !EMAIL_PASS) {
       console.error("Missing environment variables");
+      console.log("CRON_SECRET:", !!CRON_SECRET);
+      console.log("EMAIL_USER:", !!EMAIL_USER);
+      console.log("EMAIL_PASS:", !!EMAIL_PASS);
       return new NextResponse("Server configuration error", { status: 500 });
     }
 
+    // Verify Authorization header
     const authHeader = req.headers.get("Authorization");
+    console.log("Authorization header:", authHeader);
     if (authHeader !== `Bearer ${CRON_SECRET}`) {
+      console.error("Invalid Authorization Header");
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
+    // Fetch notes with due reminders
     const notes = await db
       .collection("notes")
       .find({
@@ -39,24 +47,36 @@ export async function GET(req: Request) {
       })
       .toArray();
 
+    console.log("Matching notes:", notes);
+
     for (const note of notes) {
-      // Get user session for this note
-      const session = await getServerSession(authOptions);
-      if (!session?.user?.email) continue;
+      console.log(`Processing note: ${note.title}, ID: ${note._id}`);
 
-      const mailOptions = {
-        from: `"Note Reminder" <${EMAIL_USER}>`,
-        to: "toni.piattelli@gmail.com",
-        subject: `Reminder: ${note.title}`,
-        text: `Hi, you have a reminder for your note titled "${note.title}". Content: ${note.content}`,
-      };
+      try {
+        const mailOptions = {
+          from: `"Note Reminder" <${EMAIL_USER}>`,
+          to: "toni.piattelli@gmail.com", // Hardcoded email for debugging
+          subject: `Reminder: ${note.title}`,
+          text: `Hi, you have a reminder for your note titled "${note.title}". Content: ${note.content}`,
+        };
 
-      await transporter.sendMail(mailOptions);
-      await db
-        .collection("notes")
-        .updateOne({ _id: note._id }, { $set: { "reminder.sent": true } });
+        console.log("Sending email with options:", mailOptions);
+
+        // Send the email
+        await transporter.sendMail(mailOptions);
+        console.log(`Email successfully sent to: toni.piattelli@gmail.com`);
+
+        // Update the reminder status
+        await db
+          .collection("notes")
+          .updateOne({ _id: note._id }, { $set: { "reminder.sent": true } });
+        console.log(`Reminder status updated for note ID: ${note._id}`);
+      } catch (err) {
+        console.error(`Failed to send email for note ID: ${note._id}`, err);
+      }
     }
 
+    console.log("Reminder check completed successfully.");
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Check reminders error:", error);
