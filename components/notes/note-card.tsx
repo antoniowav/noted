@@ -271,7 +271,7 @@ export function NoteCard({ note, onUpdate }: NoteCardProps) {
             className="group relative overflow-hidden hover:bg-primary/10 hover:text-primary transition-all duration-200 w-[90px] hover:w-[120px]"
           >
             <span className="absolute inset-0 w-full h-full flex items-center justify-center transition-all duration-200 group-hover:-translate-x-2">
-              {note.shareId ? "Copy Link" : "Share"}
+              Copy Link
             </span>
             <LinkIcon className="absolute right-3 h-4 w-4 transition-all duration-200 opacity-0 translate-x-4 group-hover:opacity-100 group-hover:translate-x-0" />
           </Button>
