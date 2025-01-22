@@ -1,15 +1,16 @@
-import { useQuery } from "@tanstack/react-query";
+import useSWR from "swr";
 import type { NoteType } from "@/types";
 
-async function getNotes() {
+async function fetchNotes() {
   const res = await fetch("/api/notes");
   if (!res.ok) throw new Error("Failed to fetch notes");
   return res.json();
 }
 
 export function useNotes() {
-  return useQuery<{ data: NoteType[] }>({
-    queryKey: ["notes"],
-    queryFn: getNotes,
-  });
+  const { data, error, isLoading, mutate } = useSWR<{ data: NoteType[] }>(
+    "/api/notes",
+    fetchNotes
+  );
+  return { data, error, isLoading, mutate };
 }

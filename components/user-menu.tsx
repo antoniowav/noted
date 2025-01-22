@@ -10,10 +10,15 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { User } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { UserMenuSkeleton } from "./user-menu-skeleton";
 
 export function UserMenu() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const isMobile = useMediaQuery("(max-width: 640px)");
+
+  if (status === "loading") {
+    return <UserMenuSkeleton />;
+  }
 
   if (!isMobile) {
     return <p className="text-sm">Signed in as {session?.user?.name}</p>;

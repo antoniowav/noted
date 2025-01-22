@@ -20,12 +20,34 @@ import {
 } from "@/components/ui/dialog";
 import { useNotes } from "@/hooks/use-notes";
 import type { NoteType } from "@/types";
+import { useSession } from "next-auth/react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function CalendarView() {
   const router = useRouter();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
-  const { data: notes } = useNotes();
+  const { data: notes, isLoading } = useNotes();
+  const { status: sessionStatus } = useSession();
+
+  if (sessionStatus === "loading" || isLoading) {
+    return (
+      <div className="w-full max-w-4xl mx-auto p-4">
+        <div className="flex items-center justify-between mb-6">
+          <Skeleton className="h-8 w-40" />
+          <div className="flex gap-2">
+            <Skeleton className="h-9 w-9" />
+            <Skeleton className="h-9 w-9" />
+          </div>
+        </div>
+        <div className="grid grid-cols-7 gap-2">
+          {[...Array(35)].map((_, i) => (
+            <Skeleton key={i} className="h-[100px] rounded-xl" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   const getNotesForDay = (date: Date) => {
     return (

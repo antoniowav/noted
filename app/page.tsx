@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { NoteList } from "@/components/notes/note-list";
+import { NotesList } from "@/components/notes/notes-list";
 import { NoteForm } from "@/components/notes/note-form";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -47,7 +47,7 @@ export default async function HomePage() {
         <div className="h-fit lg:sticky lg:top-10">
           <NoteForm />
         </div>
-        <NoteList />
+        <NotesList />
       </div>
     </div>
   );
