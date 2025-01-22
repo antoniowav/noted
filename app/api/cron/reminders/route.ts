@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import nodemailer from "nodemailer";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 const CRON_SECRET = process.env.CRON_SECRET;
 const EMAIL_USER = process.env.EMAIL_USER;
@@ -8,6 +10,9 @@ const EMAIL_PASS = process.env.EMAIL_PASS;
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true,
   auth: {
     user: EMAIL_USER,
     pass: EMAIL_PASS,
@@ -28,31 +33,20 @@ export async function GET(req: Request) {
 
     const notes = await db
       .collection("notes")
-      .aggregate([
-        {
-          $match: {
-            "reminder.date": { $lte: new Date() },
-            "reminder.sent": false,
-          },
-        },
-        {
-          $lookup: {
-            from: "users",
-            localField: "userId",
-            foreignField: "_id",
-            as: "user",
-          },
-        },
-        {
-          $unwind: "$user",
-        },
-      ])
+      .find({
+        "reminder.date": { $lte: new Date() },
+        "reminder.sent": false,
+      })
       .toArray();
 
     for (const note of notes) {
+      // Get user session for this note
+      const session = await getServerSession(authOptions);
+      if (!session?.user?.email) continue;
+
       const mailOptions = {
         from: `"Note Reminder" <${EMAIL_USER}>`,
-        to: note.user.email,
+        to: session.user.email,
         subject: `Reminder: ${note.title}`,
         text: `Hi, you have a reminder for your note titled "${note.title}". Content: ${note.content}`,
       };
