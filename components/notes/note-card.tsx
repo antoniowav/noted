@@ -134,12 +134,14 @@ export function NoteCard({ note, onUpdate }: NoteCardProps) {
 
   async function setReminder() {
     if (!date) return;
-    const utcDate = new Date(date.getTime() - date.getTimezoneOffset());
+
+    // Convert local time to UTC ISO string
+    const isoDate = date.toISOString();
 
     try {
       const response = await fetch(`/api/notes/${note._id}/reminder`, {
         method: "POST",
-        body: JSON.stringify({ date: utcDate.toISOString() }),
+        body: JSON.stringify({ date: isoDate }),
         headers: { "Content-Type": "application/json" },
       });
 
