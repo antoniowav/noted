@@ -12,6 +12,7 @@ import { DeleteNoteDialog } from "./delete-note-dialog";
 import { Badge } from "@/components/ui/badge";
 import { useCategories } from "@/hooks/use-categories";
 import { LinkIcon, PencilIcon, TrashIcon } from "lucide-react";
+import { DateTimePicker } from "@/components/ui/date-time-picker";
 
 interface NoteCardProps {
   note: NoteType;
@@ -30,6 +31,8 @@ export function NoteCard({ note, onUpdate }: NoteCardProps) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<string>("");
   const [isGeneratingLink, setIsGeneratingLink] = useState(false);
+  const [date, setDate] = useState<Date>();
+  const [isReminderOpen, setIsReminderOpen] = useState(false);
 
   async function handleDelete() {
     setIsLoading(true);
@@ -126,6 +129,24 @@ export function NoteCard({ note, onUpdate }: NoteCardProps) {
       });
     } finally {
       setIsGeneratingLink(false);
+    }
+  }
+
+  async function setReminder() {
+    try {
+      const response = await fetch(`/api/notes/${note._id}/reminder`, {
+        method: "POST",
+        body: JSON.stringify({ date }),
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!response.ok) throw new Error();
+      await onUpdate();
+      toast.success("Reminder set");
+      setDate(undefined);
+      setIsReminderOpen(false);
+    } catch {
+      toast.error("Failed to set reminder");
     }
   }
 
@@ -253,6 +274,13 @@ export function NoteCard({ note, onUpdate }: NoteCardProps) {
             </span>
             <TrashIcon className="absolute right-3 h-4 w-4 transition-all duration-200 opacity-0 translate-x-4 group-hover:opacity-100 group-hover:translate-x-0" />
           </Button>
+          <DateTimePicker
+            date={date}
+            setDate={setDate}
+            isOpen={isReminderOpen}
+            setIsOpen={setIsReminderOpen}
+            onSubmit={setReminder}
+          />
         </div>
       </motion.div>
 

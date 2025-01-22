@@ -11,6 +11,10 @@ export interface NoteType {
   isArchived: boolean;
   createdAt: string;
   updatedAt: string;
+  reminder?: {
+    date: Date;
+    sent: boolean;
+  };
 }
 
 export interface ApiResponse<T = unknown> {
