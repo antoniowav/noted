@@ -218,7 +218,12 @@ export function SettingsForm({ user }: SettingsFormProps) {
                   "transition-transform"
                 )}
               />
-              <Button onClick={addCategory}>Add</Button>
+              <Button
+                disabled={isLoading || !newCategory.trim()}
+                onClick={addCategory}
+              >
+                Add
+              </Button>
             </div>
             <div className="flex flex-wrap gap-2">
               {existingCategories.map((category) => (
