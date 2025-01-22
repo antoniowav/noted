@@ -7,18 +7,22 @@ import type { ApiResponse } from "@/types";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
-export async function POST(_request: Request, context: any) {
+export async function POST(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session) {
+    if (!session?.user) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
       );
     }
 
+    const { id } = await params;
     await connectToDatabase();
-    const note = await Note.findById(context.params.id);
+    const note = await Note.findById(id);
 
     if (!note) {
       return NextResponse.json(
@@ -27,8 +31,15 @@ export async function POST(_request: Request, context: any) {
       );
     }
 
+    if (note.userId.toString() !== session.user.id) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
     const shareId = nanoid(10);
-    await Note.findByIdAndUpdate(context.params.id, {
+    await Note.findByIdAndUpdate(id, {
       $set: { shared: true, shareId },
     });
 
@@ -37,11 +48,9 @@ export async function POST(_request: Request, context: any) {
       data: { shareId },
     });
   } catch (error) {
+    console.error("Share error:", error);
     return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : "Failed to share note",
-      },
+      { success: false, error: "Failed to share note" },
       { status: 500 }
     );
   }
