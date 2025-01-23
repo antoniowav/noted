@@ -39,15 +39,31 @@ export async function GET(req: Request) {
     }
 
     // Fetch notes with due reminders
+    const now = new Date();
+    console.log("Current time (UTC):", now.toISOString());
+
     const notes = await db
       .collection("notes")
       .find({
-        "reminder.date": { $lte: new Date() },
+        "reminder.date": { $lte: now },
         "reminder.sent": false,
       })
       .toArray();
 
-    console.log("Matching notes:", notes);
+    console.log("Query criteria:", {
+      currentTime: now.toISOString(),
+      reminderDateLessThanOrEqual: true,
+      reminderSentFalse: true,
+    });
+    console.log(
+      "Found notes:",
+      notes.map((note) => ({
+        id: note._id,
+        title: note.title,
+        reminderDate: note.reminder.date,
+        sent: note.reminder.sent,
+      }))
+    );
 
     for (const note of notes) {
       console.log(`Processing note: ${note.title}, ID: ${note._id}`);
