@@ -40,7 +40,11 @@ export async function GET(req: Request) {
 
     // Fetch notes with due reminders
     const now = new Date();
+    // Add one hour to match the timezone
+    now.setHours(now.getHours() + 1);
+
     console.log("Current time (UTC):", now.toISOString());
+    console.log("Current time (Local):", now.toString());
 
     const notes = await db
       .collection("notes")
