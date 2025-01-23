@@ -8,18 +8,23 @@ import { authOptions } from "@/lib/auth";
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session) {
+    if (!session?.user) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
       );
     }
 
+    const { title, content, category } = await request.json();
+
     await connectToDatabase();
-    const body = await request.json();
     const note = await Note.create({
-      ...body,
+      title,
+      content,
+      category,
       userId: session.user.id,
+      userEmail: session.user.email,
+      createdAt: new Date(),
     });
 
     return NextResponse.json<ApiResponse<NoteType>>({

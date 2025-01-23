@@ -75,7 +75,7 @@ export async function GET(req: Request) {
       try {
         const mailOptions = {
           from: `"Note Reminder" <${EMAIL_USER}>`,
-          to: "toni.piattelli@gmail.com", // Hardcoded email for debugging
+          to: note.userEmail,
           subject: `Reminder: ${note.title}`,
           text: `Hi, you have a reminder for your note titled "${note.title}". Content: ${note.content}`,
         };
@@ -84,7 +84,7 @@ export async function GET(req: Request) {
 
         // Send the email
         await transporter.sendMail(mailOptions);
-        console.log(`Email successfully sent to: toni.piattelli@gmail.com`);
+        console.log(`Email successfully sent to: ${note.userEmail}`);
 
         // Update the reminder status
         await db

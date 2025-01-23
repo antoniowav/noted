@@ -1,42 +1,27 @@
 import mongoose from "mongoose";
 
-const noteSchema = new mongoose.Schema({
-  title: {
-    type: String,
-    required: true,
-    trim: true,
+const noteSchema = new mongoose.Schema(
+  {
+    title: String,
+    content: String,
+    category: String,
+    userId: String,
+    userEmail: String,
+    shared: { type: Boolean, default: false },
+    shareId: { type: String, default: null },
+    isPinned: { type: Boolean, default: false },
+    isArchived: { type: Boolean, default: false },
+    tags: { type: [String], default: [] },
+    reminder: {
+      date: Date,
+      sent: Boolean,
+    },
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now },
   },
-  content: {
-    type: String,
-    required: true,
-  },
-  userId: {
-    type: String,
-    required: true,
-  },
-  shared: {
-    type: Boolean,
-    default: false,
-  },
-  shareId: {
-    type: String,
-    unique: true,
-    sparse: true,
-  },
-  tags: [{ type: String }],
-  category: { type: String },
-  isPinned: { type: Boolean, default: false },
-  isArchived: { type: Boolean, default: false },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now,
-  },
-});
-
-noteSchema.index({ userId: 1 });
+  {
+    timestamps: true,
+  }
+);
 
 export const Note = mongoose.models.Note || mongoose.model("Note", noteSchema);

@@ -3,18 +3,19 @@ export interface NoteType {
   title: string;
   content: string;
   userId: string;
+  userEmail: string;
   shared: boolean;
   shareId?: string;
-  tags: string[];
-  category?: string;
   isPinned: boolean;
   isArchived: boolean;
-  createdAt: string;
-  updatedAt: string;
+  tags: string[];
+  category?: string;
   reminder?: {
     date: Date;
     sent: boolean;
   };
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface ApiResponse<T = unknown> {
