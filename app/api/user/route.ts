@@ -1,7 +1,30 @@
+import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/db";
+
+export async function GET() {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    const user = await db
+      .collection("users")
+      .findOne({ email: session.user.email });
+
+    return NextResponse.json({ success: true, data: user });
+  } catch (error) {
+    return NextResponse.json(
+      { success: false, error: "Failed to fetch user" },
+      { status: 500 }
+    );
+  }
+}
 
 export async function PATCH(req: Request) {
   try {
@@ -13,10 +36,9 @@ export async function PATCH(req: Request) {
     const body = await req.json();
     const { name } = body;
 
-    const user = await prisma.user.update({
-      where: { email: session.user.email },
-      data: { name },
-    });
+    const user = await db
+      .collection("users")
+      .updateOne({ email: session.user.email }, { $set: { name } });
 
     // Update the session
     session.user.name = name;
@@ -40,9 +62,7 @@ export async function DELETE() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    await prisma.user.delete({
-      where: { email: session.user.email },
-    });
+    await db.collection("users").deleteOne({ email: session.user.email });
 
     return NextResponse.json({ success: true });
   } catch (error) {
