@@ -14,6 +14,22 @@ interface RootLayoutProps {
 export const metadata = {
   title: "noted.",
   description: "A simple and efficient note-taking application",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    title: "noted.",
+    statusBarStyle: "black-translucent",
+  },
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/icons/icon-192x192.png",
+  },
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: RootLayoutProps) {
